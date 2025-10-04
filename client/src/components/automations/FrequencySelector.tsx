@@ -12,7 +12,10 @@ interface FrequencySelectorProps {
 }
 
 export function FrequencySelector({ frequency, register, setValue, watch }: FrequencySelectorProps) {
-  const frequencyDetails = watch('frequencyDetails') || {};
+  const timeOfDay = watch('timeOfDay');
+  const dayOfWeek = watch('dayOfWeek');
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   return (
     <Card className="backdrop-blur-sm bg-card/50 border-2">
@@ -30,7 +33,11 @@ export function FrequencySelector({ frequency, register, setValue, watch }: Freq
             value={frequency}
             onValueChange={(value) => {
               setValue('frequency', value);
-              setValue('frequencyDetails', {});
+              // Clear frequency-specific fields when changing frequency
+              if (value !== 'day' && value !== 'week') {
+                setValue('timeOfDay', undefined);
+                setValue('dayOfWeek', undefined);
+              }
             }}
           >
             <SelectTrigger>
@@ -48,12 +55,12 @@ export function FrequencySelector({ frequency, register, setValue, watch }: Freq
 
         {frequency === 'day' && (
           <div className="space-y-2">
-            <Label htmlFor="time">Run at (time) *</Label>
+            <Label htmlFor="timeOfDay">Run at (time) *</Label>
             <Input
-              id="time"
+              id="timeOfDay"
               type="time"
-              value={frequencyDetails.time || '09:00'}
-              onChange={(e) => setValue('frequencyDetails', { time: e.target.value })}
+              value={timeOfDay || '09:00'}
+              onChange={(e) => setValue('timeOfDay', e.target.value, { shouldValidate: true })}
             />
           </div>
         )}
@@ -61,32 +68,30 @@ export function FrequencySelector({ frequency, register, setValue, watch }: Freq
         {frequency === 'week' && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="day">Day of week *</Label>
+              <Label htmlFor="dayOfWeek">Day of week *</Label>
               <Select
-                value={frequencyDetails.day || 'Monday'}
-                onValueChange={(value) => setValue('frequencyDetails', { ...frequencyDetails, day: value })}
+                value={dayOfWeek !== undefined ? String(dayOfWeek) : '1'}
+                onValueChange={(value) => setValue('dayOfWeek', Number(value), { shouldValidate: true })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Monday">Monday</SelectItem>
-                  <SelectItem value="Tuesday">Tuesday</SelectItem>
-                  <SelectItem value="Wednesday">Wednesday</SelectItem>
-                  <SelectItem value="Thursday">Thursday</SelectItem>
-                  <SelectItem value="Friday">Friday</SelectItem>
-                  <SelectItem value="Saturday">Saturday</SelectItem>
-                  <SelectItem value="Sunday">Sunday</SelectItem>
+                  {dayNames.map((day, index) => (
+                    <SelectItem key={index} value={String(index)}>
+                      {day}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="weekTime">Run at (time) *</Label>
+              <Label htmlFor="weekTimeOfDay">Run at (time) *</Label>
               <Input
-                id="weekTime"
+                id="weekTimeOfDay"
                 type="time"
-                value={frequencyDetails.time || '09:00'}
-                onChange={(e) => setValue('frequencyDetails', { ...frequencyDetails, time: e.target.value })}
+                value={timeOfDay || '09:00'}
+                onChange={(e) => setValue('timeOfDay', e.target.value, { shouldValidate: true })}
               />
             </div>
           </div>
