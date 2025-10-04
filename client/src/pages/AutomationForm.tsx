@@ -167,6 +167,19 @@ export function AutomationForm() {
       setLoading(true);
       console.log('Submitting automation:', { ...data, isActive: turnOn });
 
+      // Validate required fields
+      if (!data.campaignId) {
+        throw new Error('Campaign is required');
+      }
+
+      if (!data.timingUnit) {
+        throw new Error('Time unit is required');
+      }
+
+      if (!data.timingValue || data.timingValue < 1) {
+        throw new Error('Time value must be greater than 0');
+      }
+
       // Get campaign name from campaigns list
       const campaign = campaigns.find(c => c.id === Number(data.campaignId));
       if (!campaign) {
@@ -263,12 +276,15 @@ export function AutomationForm() {
 
         <CampaignSelector
           campaigns={campaigns}
-          register={register}
+          setValue={setValue}
+          watch={watch}
           errors={errors}
         />
 
         <TimingSelector
           register={register}
+          setValue={setValue}
+          watch={watch}
           errors={errors}
         />
 

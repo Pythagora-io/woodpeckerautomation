@@ -8,7 +8,7 @@ const router = express.Router();
 // Endpoint: GET /api/activity
 // Request: { limit?: number }
 // Response: { logs: Array<ActivityLog> }
-router.get('/', requireUser, async (req, res) => {
+router.get('/', requireUser(), async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
 
@@ -27,7 +27,7 @@ router.get('/', requireUser, async (req, res) => {
 // Endpoint: GET /api/activity/automation/:automationId
 // Request: { limit?: number }
 // Response: { logs: Array<ActivityLog> }
-router.get('/automation/:automationId', requireUser, async (req, res) => {
+router.get('/automation/:automationId', requireUser(), async (req, res) => {
   try {
     const { automationId } = req.params;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;

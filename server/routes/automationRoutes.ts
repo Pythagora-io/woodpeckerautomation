@@ -8,7 +8,7 @@ const router = express.Router();
 // Endpoint: GET /api/automations
 // Request: {}
 // Response: { automations: Array<Automation> }
-router.get('/', requireUser, async (req, res) => {
+router.get('/', requireUser(), async (req, res) => {
   try {
     console.log(`Fetching automations for user ${req.user._id}`);
 
@@ -25,7 +25,7 @@ router.get('/', requireUser, async (req, res) => {
 // Endpoint: GET /api/automations/:id
 // Request: {}
 // Response: { automation: Automation }
-router.get('/:id', requireUser, async (req, res) => {
+router.get('/:id', requireUser(), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -48,7 +48,7 @@ router.get('/:id', requireUser, async (req, res) => {
 // Endpoint: POST /api/automations
 // Request: { name, frequency, dayOfWeek?, timeOfDay?, campaignId, campaignName, timingValue, timingUnit, segmentFilters?, isActive }
 // Response: { automation: Automation }
-router.post('/', requireUser, async (req, res) => {
+router.post('/', requireUser(), async (req, res) => {
   try {
     const automationData = req.body;
 
@@ -82,7 +82,7 @@ router.post('/', requireUser, async (req, res) => {
 // Endpoint: PUT /api/automations/:id
 // Request: { name?, frequency?, dayOfWeek?, timeOfDay?, campaignId?, campaignName?, timingValue?, timingUnit?, segmentFilters?, isActive? }
 // Response: { automation: Automation }
-router.put('/:id', requireUser, async (req, res) => {
+router.put('/:id', requireUser(), async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -106,7 +106,7 @@ router.put('/:id', requireUser, async (req, res) => {
 // Endpoint: PATCH /api/automations/:id/toggle
 // Request: {}
 // Response: { automation: Automation }
-router.patch('/:id/toggle', requireUser, async (req, res) => {
+router.patch('/:id/toggle', requireUser(), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -129,7 +129,7 @@ router.patch('/:id/toggle', requireUser, async (req, res) => {
 // Endpoint: DELETE /api/automations/:id
 // Request: {}
 // Response: { success: boolean, message: string }
-router.delete('/:id', requireUser, async (req, res) => {
+router.delete('/:id', requireUser(), async (req, res) => {
   try {
     const { id } = req.params;
 
