@@ -79,32 +79,46 @@ export const fetchSegmentData = async (
 
     console.log('Connected to external MongoDB for segment data fetch');
 
-    // Define schema for external collections
-    // Assuming the external MongoDB has collections: usecases, categories, alternatives
-    // Adjust these based on actual external database structure
-
+    // The external MongoDB has a 'users' collection with 'segmentData' field
+    // segmentData is an object with keys: useCase, category, alternative
     const db = externalConnection.db;
 
-    // Fetch use cases
-    const useCasesCollection = db.collection('usecases');
-    const useCasesData = await useCasesCollection.find({}).toArray();
-    const useCases = useCasesData.map((doc: any) => doc.name || doc.title || doc._id.toString());
+    // Fetch all users
+    const usersCollection = db.collection('users');
+    const usersData = await usersCollection.find({}).toArray();
 
-    console.log(`Fetched ${useCases.length} use cases`);
+    console.log(`Fetched ${usersData.length} users from external database`);
 
-    // Fetch categories
-    const categoriesCollection = db.collection('categories');
-    const categoriesData = await categoriesCollection.find({}).toArray();
-    const categories = categoriesData.map((doc: any) => doc.name || doc.title || doc._id.toString());
+    // Extract unique segment data values
+    const useCasesSet = new Set<string>();
+    const categoriesSet = new Set<string>();
+    const alternativesSet = new Set<string>();
 
-    console.log(`Fetched ${categories.length} categories`);
+    for (const user of usersData) {
+      if (user.segmentData) {
+        // Add useCase if it exists
+        if (user.segmentData.useCase) {
+          useCasesSet.add(user.segmentData.useCase);
+        }
+        // Add category if it exists
+        if (user.segmentData.category) {
+          categoriesSet.add(user.segmentData.category);
+        }
+        // Add alternative if it exists
+        if (user.segmentData.alternative) {
+          alternativesSet.add(user.segmentData.alternative);
+        }
+      }
+    }
 
-    // Fetch alternatives
-    const alternativesCollection = db.collection('alternatives');
-    const alternativesData = await alternativesCollection.find({}).toArray();
-    const alternatives = alternativesData.map((doc: any) => doc.name || doc.title || doc._id.toString());
+    // Convert sets to arrays
+    const useCases = Array.from(useCasesSet).sort();
+    const categories = Array.from(categoriesSet).sort();
+    const alternatives = Array.from(alternativesSet).sort();
 
-    console.log(`Fetched ${alternatives.length} alternatives`);
+    console.log(`Extracted ${useCases.length} unique use cases`);
+    console.log(`Extracted ${categories.length} unique categories`);
+    console.log(`Extracted ${alternatives.length} unique alternatives`);
 
     // Close the connection
     await externalConnection.close();

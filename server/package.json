@@ -15,7 +15,8 @@
     "dev:shared": "cd ../shared && npm run dev",
     "lint": "eslint . --format json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "init:settings": "tsx scripts/initSettings.ts"
+    "init:settings": "tsx scripts/initSettings.ts",
+    "test:segments": "tsx scripts/testSegmentFetch.ts"
   },
   "keywords": [],
   "author": "",

@@ -32,7 +32,7 @@ const getOrCreateSegment = async () => {
 // Endpoint: GET /api/settings/status
 // Request: {}
 // Response: { mongodbConnected: boolean, woodpeckerConnected: boolean, isSetupComplete: boolean }
-router.get('/status', requireUser, async (req: Request, res: Response) => {
+router.get('/status', requireUser(), async (req: Request, res: Response) => {
   try {
     console.log('Fetching settings status');
     const settings = await getOrCreateSettings();
@@ -53,7 +53,7 @@ router.get('/status', requireUser, async (req: Request, res: Response) => {
 // Endpoint: POST /api/settings/mongodb/test
 // Request: { url: string }
 // Response: { connected: boolean, message: string, error?: string }
-router.post('/mongodb/test', requireUser, async (req: Request, res: Response) => {
+router.post('/mongodb/test', requireUser(), async (req: Request, res: Response) => {
   try {
     const { url } = req.body;
 
@@ -95,7 +95,7 @@ router.post('/mongodb/test', requireUser, async (req: Request, res: Response) =>
 // Endpoint: POST /api/settings/mongodb/url
 // Request: { url: string }
 // Response: { success: boolean, message: string }
-router.post('/mongodb/url', requireUser, async (req: Request, res: Response) => {
+router.post('/mongodb/url', requireUser(), async (req: Request, res: Response) => {
   try {
     const { url } = req.body;
 
@@ -130,7 +130,7 @@ router.post('/mongodb/url', requireUser, async (req: Request, res: Response) => 
 // Endpoint: POST /api/settings/mongodb/sync-segments
 // Request: {}
 // Response: { success: boolean, message: string, data: { useCases: string[], categories: string[], alternatives: string[] } }
-router.post('/mongodb/sync-segments', requireUser, async (req: Request, res: Response) => {
+router.post('/mongodb/sync-segments', requireUser(), async (req: Request, res: Response) => {
   try {
     console.log('Syncing segment data from external MongoDB');
 
@@ -172,7 +172,7 @@ router.post('/mongodb/sync-segments', requireUser, async (req: Request, res: Res
 // Endpoint: GET /api/settings/segments
 // Request: {}
 // Response: { useCases: string[], categories: string[], alternatives: string[] }
-router.get('/segments', requireUser, async (req: Request, res: Response) => {
+router.get('/segments', requireUser(), async (req: Request, res: Response) => {
   try {
     console.log('Fetching stored segment options');
 
@@ -193,7 +193,7 @@ router.get('/segments', requireUser, async (req: Request, res: Response) => {
 // Endpoint: POST /api/settings/woodpecker/test
 // Request: { apiKey: string }
 // Response: { connected: boolean, message: string, error?: string }
-router.post('/woodpecker/test', requireUser, async (req: Request, res: Response) => {
+router.post('/woodpecker/test', requireUser(), async (req: Request, res: Response) => {
   try {
     const { apiKey } = req.body;
 
@@ -241,7 +241,7 @@ router.post('/woodpecker/test', requireUser, async (req: Request, res: Response)
 // Endpoint: POST /api/settings/woodpecker/api-key
 // Request: { apiKey: string }
 // Response: { success: boolean, message: string }
-router.post('/woodpecker/api-key', requireUser, async (req: Request, res: Response) => {
+router.post('/woodpecker/api-key', requireUser(), async (req: Request, res: Response) => {
   try {
     const { apiKey } = req.body;
 
@@ -276,7 +276,7 @@ router.post('/woodpecker/api-key', requireUser, async (req: Request, res: Respon
 // Endpoint: GET /api/settings/woodpecker/campaigns
 // Request: {}
 // Response: { campaigns: Array<{ id: number, name: string, status: string }> }
-router.get('/woodpecker/campaigns', requireUser, async (req: Request, res: Response) => {
+router.get('/woodpecker/campaigns', requireUser(), async (req: Request, res: Response) => {
   try {
     console.log('Fetching Woodpecker campaigns');
 

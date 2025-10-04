@@ -24,9 +24,12 @@ export const testWoodpeckerConnection = async (
     const apiKey = decrypt(encryptedApiKey);
 
     // Test API connection by fetching campaigns
+    // Woodpecker API uses the API key as a query parameter
     const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaigns`, {
+      params: {
+        api_key: apiKey,
+      },
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       timeout: 10000,
@@ -89,9 +92,12 @@ export const fetchWoodpeckerCampaigns = async (
     const apiKey = decrypt(encryptedApiKey);
 
     // Fetch campaigns from Woodpecker API
+    // Woodpecker API uses the API key as a query parameter
     const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaigns`, {
+      params: {
+        api_key: apiKey,
+      },
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       timeout: 10000,
