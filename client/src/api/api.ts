@@ -107,6 +107,10 @@ const api = {
     const apiInstance = localApi;
     return apiInstance.put(url, data, config);
   },
+  patch: (url: string, data?: unknown, config?: AxiosRequestConfig) => {
+    const apiInstance = localApi;
+    return apiInstance.patch(url, data, config);
+  },
   delete: (url: string, config?: AxiosRequestConfig) => {
     const apiInstance = localApi;
     return apiInstance.delete(url, config);

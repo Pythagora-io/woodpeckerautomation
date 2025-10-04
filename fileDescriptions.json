@@ -133,7 +133,7 @@
 	"server/routes/activityRoutes.ts": "Express router handling activity log retrieval for users and automations, providing endpoints to fetch recent activity logs with optional limit parameters.",
 	"server/routes/automationRoutes.ts": "Express router handling CRUD operations for user automations, providing endpoints to retrieve, create, update, toggle status, and delete automation configurations with user authentication middleware.",
 	"server/services/activityLogService.ts": "Service for managing activity logs with methods to create, retrieve, and clean up logs for users and automations, supporting tracking of execution details and performance metrics.",
-	"server/services/automationExecutor.ts": "Service for executing automated user synchronization and campaign management, processing users from external MongoDB and adding them to Woodpecker campaigns based on configurable segment and timing filters.",
+	"server/services/automationExecutor.ts": "Service for executing automated user processing workflows, fetching users from external databases, filtering unprocessed users, and adding them to Woodpecker campaigns with comprehensive logging and error handling.",
 	"server/services/automationScheduler.ts": "Automated task scheduler service that periodically checks and executes due automations, with methods to start, stop, and manage execution intervals.",
 	"server/services/automationService.ts": "Service layer for managing user automation workflows, providing CRUD operations, scheduling logic, and methods for creating, retrieving, updating, and executing automated tasks with dynamic run-time calculations."
 }

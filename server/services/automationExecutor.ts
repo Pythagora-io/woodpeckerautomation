@@ -139,24 +139,39 @@ export class AutomationExecutor {
   private static calculateTimeWindow(automation: IAutomation): { startTime: Date; endTime: Date } {
     const now = new Date();
 
-    // Convert timing to hours
-    let targetHours = automation.timingValue;
-    if (automation.timingUnit === 'days') {
-      targetHours *= 24;
+    // Convert timing to milliseconds
+    let targetMs = automation.timingValue;
+    if (automation.timingUnit === 'hours') {
+      targetMs *= 60 * 60 * 1000; // hours to ms
+    } else if (automation.timingUnit === 'days') {
+      targetMs *= 24 * 60 * 60 * 1000; // days to ms
     }
 
-    // Calculate margin based on frequency
-    let marginHours = 1; // default for minute/second/hour
-    if (automation.frequency === 'day') {
-      marginHours = 24;
+    // Calculate margin based on frequency to catch users since last run
+    // The margin should be wide enough to catch users who should have been processed
+    let marginMs = 60 * 60 * 1000; // default 1 hour for minute/second/hour frequencies
+
+    if (automation.frequency === 'hour') {
+      marginMs = 1.5 * 60 * 60 * 1000; // 1.5 hours margin for hourly runs
+    } else if (automation.frequency === 'day') {
+      marginMs = 25 * 60 * 60 * 1000; // 25 hours margin for daily runs (to handle DST)
     } else if (automation.frequency === 'week') {
-      marginHours = 24;
+      marginMs = 25 * 60 * 60 * 1000; // 25 hours margin for weekly runs
+    } else if (automation.frequency === 'minute') {
+      marginMs = 2 * 60 * 1000; // 2 minutes margin for minute runs
+    } else if (automation.frequency === 'second') {
+      marginMs = 2 * 60 * 1000; // 2 minutes margin for second runs
     }
 
-    // Calculate time window
-    const targetTime = new Date(now.getTime() - targetHours * 60 * 60 * 1000);
-    const startTime = new Date(targetTime.getTime() - marginHours * 60 * 60 * 1000);
-    const endTime = new Date(targetTime.getTime() + marginHours * 60 * 60 * 1000);
+    // Calculate the target signup time (when users should have signed up)
+    // e.g., if timing is "2 days after signup", we look for users who signed up 2 days ago
+    const targetSignupTime = new Date(now.getTime() - targetMs);
+
+    // Create a window around the target time
+    // startTime = earliest signup time we should look for
+    // endTime = latest signup time we should look for
+    const startTime = new Date(targetSignupTime.getTime() - marginMs);
+    const endTime = new Date(targetSignupTime.getTime() + marginMs);
 
     return { startTime, endTime };
   }
