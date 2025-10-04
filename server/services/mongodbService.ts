@@ -1,6 +1,79 @@
 import mongoose from 'mongoose';
 import { decrypt } from '../utils/encryption';
 
+export class MongoDBService {
+  /**
+   * Tests connection to external MongoDB instance
+   * @param encryptedUrl - Encrypted MongoDB connection URL
+   * @returns Object with connection status and message
+   */
+  static async testConnection(
+    encryptedUrl: string
+  ): Promise<{ connected: boolean; message: string; error?: string }> {
+    return testMongoDBConnection(encryptedUrl);
+  }
+
+  /**
+   * Query external users based on criteria
+   * @param mongoUrl - Decrypted MongoDB connection URL
+   * @param query - MongoDB query object
+   * @returns Array of users matching criteria
+   */
+  static async queryExternalUsers(mongoUrl: string, query: Record<string, unknown>): Promise<unknown[]> {
+    let externalConnection: typeof mongoose | null = null;
+
+    try {
+      console.log('Querying external MongoDB for users...');
+
+      // Create a separate connection instance
+      externalConnection = await mongoose.createConnection(mongoUrl, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 10000,
+      }).asPromise();
+
+      console.log('Connected to external MongoDB');
+
+      const db = externalConnection.db;
+      const usersCollection = db.collection('users');
+
+      // Execute query
+      const users = await usersCollection.find(query).toArray();
+
+      console.log(`Found ${users.length} users matching query`);
+
+      // Close the connection
+      await externalConnection.close();
+
+      return users;
+    } catch (error: unknown) {
+      console.error('Error querying external MongoDB:', error);
+
+      if (externalConnection) {
+        try {
+          await externalConnection.close();
+        } catch (closeError) {
+          console.error('Error closing MongoDB connection:', closeError);
+        }
+      }
+
+      throw new Error(`Failed to query external MongoDB: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Fetch segment data from external MongoDB
+   * @param encryptedUrl - Encrypted MongoDB connection URL
+   * @returns Object with segment data arrays
+   */
+  static async fetchSegmentData(encryptedUrl: string): Promise<{
+    useCases: string[];
+    categories: string[];
+    alternatives: string[];
+  }> {
+    return fetchSegmentData(encryptedUrl);
+  }
+}
+
 /**
  * Tests connection to external MongoDB instance
  * @param encryptedUrl - Encrypted MongoDB connection URL

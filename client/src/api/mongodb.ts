@@ -8,7 +8,7 @@ export const testMongoDBConnection = async (connectionUrl: string) => {
   try {
     const response = await api.post('/api/settings/mongodb/test', { url: connectionUrl });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }
@@ -22,7 +22,7 @@ export const updateMongoDBConnection = async (connectionUrl: string) => {
   try {
     const response = await api.post('/api/settings/mongodb/url', { url: connectionUrl });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }
@@ -36,7 +36,7 @@ export const syncSegmentData = async () => {
   try {
     const response = await api.post('/api/settings/mongodb/sync-segments');
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }
@@ -50,7 +50,7 @@ export const getSegmentOptions = async () => {
   try {
     const response = await api.get('/api/settings/segments');
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }

@@ -18,14 +18,16 @@ import { SegmentFilters } from '@/components/automations/SegmentFilters';
 interface FormData {
   name: string;
   frequency: string;
-  frequencyDetails: Record<string, unknown>;
-  campaignId: string;
-  timeValue: number;
-  timeUnit: string;
-  segmentFilters: {
-    useCase: string[];
-    category: string[];
-    alternative: string[];
+  dayOfWeek?: number;
+  timeOfDay?: string;
+  campaignId: number | string;
+  campaignName: string;
+  timingValue: number;
+  timingUnit: string;
+  segmentFilters?: {
+    useCase?: string[];
+    category?: string[];
+    alternative?: string[];
   };
 }
 
@@ -36,7 +38,7 @@ export function AutomationForm() {
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
-  const [campaigns, setCampaigns] = useState<Array<{ id: string; name: string }>>([]);
+  const [campaigns, setCampaigns] = useState<Array<{ id: number; name: string }>>([]);
   const [segmentOptions, setSegmentOptions] = useState<{
     useCases?: string[];
     categories?: string[];
@@ -48,10 +50,12 @@ export function AutomationForm() {
     defaultValues: {
       name: '',
       frequency: 'hour',
-      frequencyDetails: {},
+      dayOfWeek: undefined,
+      timeOfDay: undefined,
       campaignId: '',
-      timeValue: 2,
-      timeUnit: 'hours',
+      campaignName: '',
+      timingValue: 2,
+      timingUnit: 'hours',
       segmentFilters: {
         useCase: [],
         category: [],
@@ -61,6 +65,17 @@ export function AutomationForm() {
   });
 
   const frequency = watch('frequency');
+  const campaignId = watch('campaignId');
+
+  // Update campaign name when campaign ID changes
+  useEffect(() => {
+    if (campaignId && campaigns.length > 0) {
+      const campaign = campaigns.find(c => c.id === Number(campaignId));
+      if (campaign) {
+        setValue('campaignName', campaign.name);
+      }
+    }
+  }, [campaignId, campaigns, setValue]);
 
   useEffect(() => {
     loadData();
@@ -79,7 +94,7 @@ export function AutomationForm() {
         getWoodpeckerCampaigns(),
         getSegmentOptions()
       ]) as [
-        { campaigns: Array<{ id: string; name: string }> },
+        { campaigns: Array<{ id: number; name: string }> },
         { useCases?: string[]; categories?: string[]; alternatives?: string[] }
       ];
       setCampaigns(campaignsRes.campaigns);
@@ -102,14 +117,16 @@ export function AutomationForm() {
         automation: {
           name: string;
           frequency: string;
-          frequencyDetails: Record<string, unknown>;
-          campaignId: string;
-          timeValue: number;
-          timeUnit: string;
-          segmentFilters: {
-            useCase: string[];
-            category: string[];
-            alternative: string[];
+          dayOfWeek?: number;
+          timeOfDay?: string;
+          campaignId: number;
+          campaignName: string;
+          timingValue: number;
+          timingUnit: string;
+          segmentFilters?: {
+            useCase?: string[];
+            category?: string[];
+            alternative?: string[];
           };
         };
       };
@@ -117,16 +134,22 @@ export function AutomationForm() {
 
       setValue('name', automation.name);
       setValue('frequency', automation.frequency);
-      setValue('frequencyDetails', automation.frequencyDetails);
+      setValue('dayOfWeek', automation.dayOfWeek);
+      setValue('timeOfDay', automation.timeOfDay);
       setValue('campaignId', automation.campaignId);
-      setValue('timeValue', automation.timeValue);
-      setValue('timeUnit', automation.timeUnit);
-      setValue('segmentFilters', automation.segmentFilters);
+      setValue('campaignName', automation.campaignName);
+      setValue('timingValue', automation.timingValue);
+      setValue('timingUnit', automation.timingUnit);
+      setValue('segmentFilters', automation.segmentFilters || {
+        useCase: [],
+        category: [],
+        alternative: []
+      });
 
-      const hasFilters = automation.segmentFilters.useCase?.length > 0 ||
-                        automation.segmentFilters.category?.length > 0 ||
-                        automation.segmentFilters.alternative?.length > 0;
-      setEnableSegmentFilters(hasFilters);
+      const hasFilters = automation.segmentFilters?.useCase?.length ||
+                        automation.segmentFilters?.category?.length ||
+                        automation.segmentFilters?.alternative?.length;
+      setEnableSegmentFilters(!!hasFilters);
 
       console.log('Automation loaded successfully');
     } catch (error) {
@@ -142,16 +165,25 @@ export function AutomationForm() {
   const onSubmit = async (data: FormData, turnOn: boolean = false) => {
     try {
       setLoading(true);
-      console.log('Submitting automation:', { ...data, status: turnOn });
+      console.log('Submitting automation:', { ...data, isActive: turnOn });
+
+      // Get campaign name from campaigns list
+      const campaign = campaigns.find(c => c.id === Number(data.campaignId));
+      if (!campaign) {
+        throw new Error('Please select a valid campaign');
+      }
 
       const payload = {
-        ...data,
-        status: turnOn,
-        segmentFilters: enableSegmentFilters ? data.segmentFilters : {
-          useCase: [],
-          category: [],
-          alternative: []
-        }
+        name: data.name,
+        frequency: data.frequency,
+        dayOfWeek: data.dayOfWeek,
+        timeOfDay: data.timeOfDay,
+        campaignId: Number(data.campaignId),
+        campaignName: campaign.name,
+        timingValue: data.timingValue,
+        timingUnit: data.timingUnit,
+        segmentFilters: enableSegmentFilters ? data.segmentFilters : undefined,
+        isActive: turnOn,
       };
 
       if (isEditMode && id) {

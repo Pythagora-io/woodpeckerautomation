@@ -4,7 +4,10 @@ import { Request, Response } from 'express';
 import basicRoutes from './routes/index';
 import authRoutes from './routes/authRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import automationRoutes from './routes/automationRoutes';
+import activityRoutes from './routes/activityRoutes';
 import { connectDB } from './config/database';
+import { AutomationScheduler } from './services/automationScheduler';
 import cors from 'cors';
 
 // Load environment variables
@@ -41,6 +44,10 @@ app.use(basicRoutes);
 app.use('/api/auth', authRoutes);
 // Settings Routes
 app.use('/api/settings', settingsRoutes);
+// Automation Routes
+app.use('/api/automations', automationRoutes);
+// Activity Routes
+app.use('/api/activity', activityRoutes);
 
 // If no routes handled the request, it's a 404
 app.use((req: Request, res: Response) => {
@@ -56,4 +63,21 @@ app.use((err: Error, req: Request, res: Response) => {
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+
+  // Start automation scheduler after server starts
+  console.log('Initializing automation scheduler...');
+  AutomationScheduler.start();
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server and stopping scheduler');
+  AutomationScheduler.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received: closing HTTP server and stopping scheduler');
+  AutomationScheduler.stop();
+  process.exit(0);
 });

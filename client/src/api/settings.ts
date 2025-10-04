@@ -8,7 +8,7 @@ export const getConnectionStatus = async () => {
   try {
     const response = await api.get('/api/settings/status');
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }
@@ -22,7 +22,7 @@ export const getSetupStatus = async () => {
   try {
     const response = await api.get('/api/settings/status');
     return { setupComplete: response.data.isSetupComplete };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }

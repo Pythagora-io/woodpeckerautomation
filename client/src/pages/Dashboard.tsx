@@ -13,19 +13,21 @@ import { EmptyState } from '@/components/automations/EmptyState';
 interface Automation {
   _id: string;
   name: string;
-  status: boolean;
+  isActive: boolean;
   frequency: string;
-  frequencyDetails: Record<string, unknown>;
-  campaignId: string;
+  dayOfWeek?: number;
+  timeOfDay?: string;
+  campaignId: number;
   campaignName: string;
-  timeValue: number;
-  timeUnit: string;
-  segmentFilters: {
+  timingValue: number;
+  timingUnit: string;
+  segmentFilters?: {
     useCase?: string[];
     category?: string[];
     alternative?: string[];
   };
-  lastRun: string;
+  lastRun?: string;
+  nextRun?: string;
 }
 
 export function Dashboard() {
@@ -61,9 +63,9 @@ export function Dashboard() {
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
       console.log(`Toggling automation ${id} status to ${!currentStatus}`);
-      await toggleAutomationStatus(id, !currentStatus);
+      const response = await toggleAutomationStatus(id) as { automation: Automation };
       setAutomations(automations.map(auto =>
-        auto._id === id ? { ...auto, status: !currentStatus } : auto
+        auto._id === id ? response.automation : auto
       ));
       toast({
         title: 'Success',
@@ -102,7 +104,10 @@ export function Dashboard() {
     }
   };
 
-  const getFrequencyLabel = (frequency: string, details: Record<string, unknown>) => {
+  const getFrequencyLabel = (automation: Automation) => {
+    const { frequency, dayOfWeek, timeOfDay } = automation;
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
     switch (frequency) {
       case 'minute':
         return 'Every minute';
@@ -111,9 +116,9 @@ export function Dashboard() {
       case 'hour':
         return 'Every hour';
       case 'day':
-        return `Every day at ${details.time || '00:00'}`;
+        return `Every day${timeOfDay ? ` at ${timeOfDay}` : ''}`;
       case 'week':
-        return `Every ${details.day || 'Monday'} at ${details.time || '00:00'}`;
+        return `Every ${dayOfWeek !== undefined ? days[dayOfWeek] : 'week'}${timeOfDay ? ` at ${timeOfDay}` : ''}`;
       default:
         return frequency;
     }
@@ -182,8 +187,8 @@ export function Dashboard() {
                       {automation.name}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-2">
-                      <Badge variant={automation.status ? 'default' : 'secondary'} className="gap-1">
-                        {automation.status ? (
+                      <Badge variant={automation.isActive ? 'default' : 'secondary'} className="gap-1">
+                        {automation.isActive ? (
                           <>
                             <Play className="h-3 w-3" />
                             Active
@@ -198,8 +203,8 @@ export function Dashboard() {
                     </CardDescription>
                   </div>
                   <Switch
-                    checked={automation.status}
-                    onCheckedChange={() => handleToggleStatus(automation._id, automation.status)}
+                    checked={automation.isActive}
+                    onCheckedChange={() => handleToggleStatus(automation._id, automation.isActive)}
                   />
                 </div>
               </CardHeader>
@@ -209,7 +214,7 @@ export function Dashboard() {
                     <Clock className="h-4 w-4 text-purple-600" />
                     <span className="font-medium">Frequency:</span>
                     <span className="text-muted-foreground">
-                      {getFrequencyLabel(automation.frequency, automation.frequencyDetails)}
+                      {getFrequencyLabel(automation)}
                     </span>
                   </div>
                   
@@ -225,7 +230,7 @@ export function Dashboard() {
                     <Users className="h-4 w-4 text-green-600" />
                     <span className="font-medium">Timing:</span>
                     <span className="text-muted-foreground">
-                      {automation.timeValue} {automation.timeUnit} after signup
+                      {automation.timingValue} {automation.timingUnit} after signup
                     </span>
                   </div>
                 </div>

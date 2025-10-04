@@ -102,7 +102,7 @@ export const fetchWoodpeckerCampaigns = async (
     });
 
     if (response.status === 200 && response.data) {
-      const campaigns = response.data.map((campaign: any) => ({
+      const campaigns = response.data.map((campaign: { id: number; name: string; status: string }) => ({
         id: campaign.id,
         name: campaign.name,
         status: campaign.status,

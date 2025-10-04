@@ -8,7 +8,7 @@ export const getWoodpeckerCampaigns = async () => {
   try {
     const response = await api.get('/api/settings/woodpecker/campaigns');
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }
@@ -22,7 +22,7 @@ export const testWoodpeckerConnection = async (apiKey: string) => {
   try {
     const response = await api.post('/api/settings/woodpecker/test', { apiKey });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }
@@ -36,7 +36,7 @@ export const updateWoodpeckerApiKey = async (apiKey: string) => {
   try {
     const response = await api.post('/api/settings/woodpecker/api-key', { apiKey });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     throw new Error(error?.response?.data?.error || error.message);
   }

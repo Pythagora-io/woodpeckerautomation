@@ -11,11 +11,13 @@ interface Activity {
   _id: string;
   automationId: string;
   automationName: string;
-  timestamp: string;
+  campaignName: string;
+  createdAt: string;
   usersFound: number;
   usersAdded: number;
   status: string;
-  errorMessage: string;
+  errorMessage?: string;
+  executionTime: number;
 }
 
 export function Activity() {
@@ -31,9 +33,9 @@ export function Activity() {
   const loadActivities = async () => {
     try {
       console.log('Loading activity log...');
-      const response = await getActivityLog() as { activities: Activity[] };
-      setActivities(response.activities);
-      console.log('Activity log loaded:', response.activities.length);
+      const response = await getActivityLog() as { logs: Activity[] };
+      setActivities(response.logs);
+      console.log('Activity log loaded:', response.logs.length);
     } catch (error) {
       console.error('Error loading activity log:', error);
       toast({
@@ -137,7 +139,7 @@ export function Activity() {
                     </CardTitle>
                     <CardDescription className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      {formatDate(activity.timestamp)}
+                      {formatDate(activity.createdAt)}
                     </CardDescription>
                   </div>
                   {getStatusBadge(activity.status)}
