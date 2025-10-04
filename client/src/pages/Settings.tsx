@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Database, Zap, RefreshCw, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Database, Zap, RefreshCw, CheckCircle2, XCircle, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/useToast';
 import { getConnectionStatus } from '@/api/settings';
-import { testMongoDBConnection, updateMongoDBConnection, syncSegmentData } from '@/api/mongodb';
+import { testMongoDBConnection, updateMongoDBConnection, syncSegmentData, getSegmentOptions } from '@/api/mongodb';
 import { testWoodpeckerConnection, updateWoodpeckerApiKey, getWoodpeckerCampaigns } from '@/api/woodpecker';
 
 export function Settings() {
@@ -24,9 +25,18 @@ export function Settings() {
   const [woodpeckerTesting, setWoodpeckerTesting] = useState(false);
   const [refreshingCampaigns, setRefreshingCampaigns] = useState(false);
   const [refreshingSegments, setRefreshingSegments] = useState(false);
+  const [segmentData, setSegmentData] = useState<{
+    useCases: string[];
+    categories: string[];
+    alternatives: string[];
+  }>({ useCases: [], categories: [], alternatives: [] });
+  const [campaigns, setCampaigns] = useState<Array<{ id: number; name: string; status: string }>>([]);
+  const [showSegments, setShowSegments] = useState(false);
+  const [showCampaigns, setShowCampaigns] = useState(false);
 
   useEffect(() => {
     loadConnectionStatus();
+    loadSegmentData();
   }, []);
 
   const loadConnectionStatus = async () => {
@@ -49,6 +59,21 @@ export function Settings() {
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
+    }
+  };
+
+  const loadSegmentData = async () => {
+    try {
+      console.log('Loading segment data...');
+      const data = await getSegmentOptions() as {
+        useCases: string[];
+        categories: string[];
+        alternatives: string[];
+      };
+      setSegmentData(data);
+      console.log('Segment data loaded:', data);
+    } catch (error) {
+      console.error('Error loading segment data:', error);
     }
   };
 
@@ -134,6 +159,7 @@ export function Settings() {
         };
       };
       const totalOptions = response.data.useCases.length + response.data.categories.length + response.data.alternatives.length;
+      setSegmentData(response.data);
       toast({
         title: 'Success',
         description: `Synced ${totalOptions} segment options from external database`,
@@ -227,8 +253,9 @@ export function Settings() {
       setRefreshingCampaigns(true);
       console.log('Refreshing campaigns...');
       const response = await getWoodpeckerCampaigns() as {
-        campaigns: Array<{ id: string; name: string }>;
+        campaigns: Array<{ id: number; name: string; status: string }>;
       };
+      setCampaigns(response.campaigns);
       toast({
         title: 'Success',
         description: `Refreshed ${response.campaigns.length} campaigns`,
@@ -341,6 +368,57 @@ export function Settings() {
                 </>
               )}
             </Button>
+
+            {(segmentData.useCases.length > 0 || segmentData.categories.length > 0 || segmentData.alternatives.length > 0) && (
+              <Collapsible open={showSegments} onOpenChange={setShowSegments} className="mt-4">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between">
+                    <span className="text-sm font-medium">
+                      View Synced Segment Data ({segmentData.useCases.length + segmentData.categories.length + segmentData.alternatives.length} items)
+                    </span>
+                    {showSegments ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-3 mt-3">
+                  {segmentData.useCases.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Use Cases ({segmentData.useCases.length})</Label>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {segmentData.useCases.map((useCase, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {useCase}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {segmentData.categories.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Categories ({segmentData.categories.length})</Label>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {segmentData.categories.map((category, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {segmentData.alternatives.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Alternatives ({segmentData.alternatives.length})</Label>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {segmentData.alternatives.map((alternative, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {alternative}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -421,6 +499,31 @@ export function Settings() {
                 </>
               )}
             </Button>
+
+            {campaigns.length > 0 && (
+              <Collapsible open={showCampaigns} onOpenChange={setShowCampaigns} className="mt-4">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between">
+                    <span className="text-sm font-medium">
+                      View Woodpecker Campaigns ({campaigns.length} campaigns)
+                    </span>
+                    {showCampaigns ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2 mt-3">
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {campaigns.map((campaign) => (
+                      <div key={campaign.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                        <span className="text-sm font-medium">{campaign.name}</span>
+                        <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                          {campaign.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         </CardContent>
       </Card>

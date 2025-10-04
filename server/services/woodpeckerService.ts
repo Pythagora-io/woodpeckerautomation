@@ -24,10 +24,11 @@ export const testWoodpeckerConnection = async (
     const apiKey = decrypt(encryptedApiKey);
 
     // Test API connection by fetching campaigns
-    // Woodpecker API uses the API key as a query parameter
+    // Woodpecker API uses Basic authentication with the API key as username
     const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaigns`, {
-      params: {
-        api_key: apiKey,
+      auth: {
+        username: apiKey,
+        password: '',
       },
       headers: {
         'Content-Type': 'application/json',
@@ -92,10 +93,11 @@ export const fetchWoodpeckerCampaigns = async (
     const apiKey = decrypt(encryptedApiKey);
 
     // Fetch campaigns from Woodpecker API
-    // Woodpecker API uses the API key as a query parameter
+    // Woodpecker API uses Basic authentication with the API key as username
     const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaigns`, {
-      params: {
-        api_key: apiKey,
+      auth: {
+        username: apiKey,
+        password: '',
       },
       headers: {
         'Content-Type': 'application/json',

@@ -123,7 +123,7 @@
 	"server/routes/settingsRoutes.ts": "Express router for managing application settings, handling MongoDB and Woodpecker API connections, testing service integrations, and synchronizing segment data with authentication middleware.",
 	"server/routes/settingsRoutes.ts.bak": "Express router for managing application settings, handling MongoDB and Woodpecker API connections, testing configurations, syncing segment data, and providing endpoints for retrieving and updating system settings.",
 	"server/services/mongodbService.ts": "MongoDB service utility for testing external database connections and fetching unique segment data from users, with secure decryption and error handling.",
-	"server/services/woodpeckerService.ts": "Service module for Woodpecker API integration, providing functions to test connection and fetch campaigns with robust error handling and API key decryption.",
+	"server/services/woodpeckerService.ts": "Service module for Woodpecker API integration, providing functions to test connection and fetch campaigns with secure API key decryption and error handling.",
 	"server/utils/encryption.ts": "Cryptographic utility module providing secure encryption and decryption functions using AES-256-CBC algorithm for protecting sensitive data like API keys.",
 	"server/scripts/initSettings.ts": "Database initialization script that ensures Settings and Segment singleton documents exist, creating default configurations if they are not present in the database.",
 	"server/scripts/testSegmentFetch.ts": "Diagnostic script for testing segment data retrieval from an external MongoDB, verifying connection, fetching use cases, categories, and alternatives with detailed logging."
