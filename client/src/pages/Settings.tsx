@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/useToast';
 import { getConnectionStatus } from '@/api/settings';
-import { testMongoDBConnection, updateMongoDBConnection } from '@/api/mongodb';
+import { testMongoDBConnection, updateMongoDBConnection, getSegmentOptions } from '@/api/mongodb';
 import { testWoodpeckerConnection, updateWoodpeckerApiKey, getWoodpeckerCampaigns } from '@/api/woodpecker';
 
 export function Settings() {
@@ -23,6 +23,7 @@ export function Settings() {
   const [mongoTesting, setMongoTesting] = useState(false);
   const [woodpeckerTesting, setWoodpeckerTesting] = useState(false);
   const [refreshingCampaigns, setRefreshingCampaigns] = useState(false);
+  const [refreshingSegments, setRefreshingSegments] = useState(false);
 
   useEffect(() => {
     loadConnectionStatus();
@@ -105,6 +106,32 @@ export function Settings() {
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
+    }
+  };
+
+  const handleRefreshSegments = async () => {
+    try {
+      setRefreshingSegments(true);
+      console.log('Refreshing segment data...');
+      const response = await getSegmentOptions() as {
+        useCases: string[];
+        categories: string[];
+        alternatives: string[];
+      };
+      const totalOptions = response.useCases.length + response.categories.length + response.alternatives.length;
+      toast({
+        title: 'Success',
+        description: `Refreshed ${totalOptions} segment options`,
+      });
+    } catch (error) {
+      console.error('Error refreshing segment data:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive'
+      });
+    } finally {
+      setRefreshingSegments(false);
     }
   };
 
@@ -269,6 +296,27 @@ export function Settings() {
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               Update Connection
+            </Button>
+          </div>
+
+          <div className="pt-4 border-t">
+            <Button
+              onClick={handleRefreshSegments}
+              disabled={refreshingSegments}
+              variant="outline"
+              className="w-full"
+            >
+              {refreshingSegments ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh Segment Data
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
