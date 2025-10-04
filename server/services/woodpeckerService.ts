@@ -3,6 +3,8 @@ import { decrypt } from '../utils/encryption';
 
 const WOODPECKER_API_BASE_URL = 'https://api.woodpecker.co/rest/v1';
 
+// Note: Woodpecker API uses x-api-key header for authentication
+
 export interface WoodpeckerCampaign {
   id: number;
   name: string;
@@ -23,14 +25,11 @@ export const testWoodpeckerConnection = async (
     // Decrypt the API key
     const apiKey = decrypt(encryptedApiKey);
 
-    // Test API connection by fetching campaigns
-    // Woodpecker API uses Basic authentication with the API key as username
-    const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaigns`, {
-      auth: {
-        username: apiKey,
-        password: '',
-      },
+    // Test API connection by fetching campaign list
+    // Woodpecker API uses x-api-key header for authentication
+    const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaign_list`, {
       headers: {
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       timeout: 10000,
@@ -93,13 +92,10 @@ export const fetchWoodpeckerCampaigns = async (
     const apiKey = decrypt(encryptedApiKey);
 
     // Fetch campaigns from Woodpecker API
-    // Woodpecker API uses Basic authentication with the API key as username
-    const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaigns`, {
-      auth: {
-        username: apiKey,
-        password: '',
-      },
+    // Woodpecker API uses x-api-key header for authentication
+    const response = await axios.get(`${WOODPECKER_API_BASE_URL}/campaign_list`, {
       headers: {
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       timeout: 10000,
