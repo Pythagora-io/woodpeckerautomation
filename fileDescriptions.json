@@ -128,12 +128,13 @@
 	"server/scripts/initSettings.ts": "Database initialization script that ensures Settings and Segment singleton documents exist, creating default configurations if they are not present in the database.",
 	"server/scripts/testSegmentFetch.ts": "Diagnostic script for testing segment data retrieval from an external MongoDB, verifying connection, fetching use cases, categories, and alternatives with detailed logging.",
 	"server/models/ActivityLog.ts": "Mongoose schema for tracking automation execution logs, capturing details like status, user metrics, execution time, and associated automation and campaign information.",
-	"server/models/Automation.ts": "Mongoose schema for defining automated campaign workflows with configurable frequency, timing, segment filters, and tracking metadata for user-specific automation tasks.",
+	"server/models/Automation.ts": "Mongoose schema for defining automated campaign triggers with configurable frequency, timing, segmentation, and tracking properties for user-specific workflows.",
 	"server/models/ProcessedUser.ts": "Mongoose schema for tracking processed users in an automation system, with unique indexing on automation and email to prevent duplicate entries.",
 	"server/routes/activityRoutes.ts": "Express router handling activity log retrieval for users and automations, providing endpoints to fetch recent activity logs with optional limit parameters.",
-	"server/routes/automationRoutes.ts": "Express router handling CRUD operations for user automations, providing endpoints to retrieve, create, update, toggle status, and delete automation configurations with user authentication middleware.",
+	"server/routes/automationRoutes.ts": "Express router for managing user automation workflows, providing endpoints for creating, retrieving, updating, toggling, and deleting automation configurations with user authentication.",
 	"server/services/activityLogService.ts": "Service for managing activity logs with methods to create, retrieve, and clean up logs for users and automations, supporting tracking of execution details and performance metrics.",
-	"server/services/automationExecutor.ts": "Service for executing automated user processing workflows, fetching users from external databases, filtering unprocessed users, and adding them to Woodpecker campaigns with comprehensive logging and error handling.",
+	"server/services/automationExecutor.ts": "Service for executing automated user campaigns by fetching users from an external MongoDB, filtering them, and adding them to a Woodpecker email campaign with detailed logging and error handling.",
 	"server/services/automationScheduler.ts": "Automated task scheduler service that periodically checks and executes due automations, with methods to start, stop, and manage execution intervals.",
-	"server/services/automationService.ts": "Service layer for managing user automation workflows, providing CRUD operations, scheduling logic, and methods for creating, retrieving, updating, and executing automated tasks with dynamic run-time calculations."
+	"server/services/automationService.ts": "Service layer for managing user automation workflows, providing CRUD operations, scheduling logic, and methods for creating, retrieving, updating, and executing automated tasks with dynamic run-time calculations.",
+	"client/src/components/automations/MarginSelector.tsx": "React component for configuring time window margin in automations, allowing users to select a margin value and unit with form validation and descriptive UI."
 }

@@ -18,6 +18,10 @@ export interface IAutomation extends Document {
   timingValue: number;
   timingUnit: 'hours' | 'days';
 
+  // Time window margin (how wide the window should be around the target time)
+  marginValue: number;
+  marginUnit: 'hours' | 'days';
+
   // Segment filters (optional)
   segmentFilters?: {
     useCase?: string[];
@@ -80,6 +84,18 @@ const automationSchema = new Schema<IAutomation>(
       type: String,
       enum: ['hours', 'days'],
       required: true,
+    },
+    marginValue: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
+    },
+    marginUnit: {
+      type: String,
+      enum: ['hours', 'days'],
+      required: true,
+      default: 'hours',
     },
     segmentFilters: {
       useCase: [String],

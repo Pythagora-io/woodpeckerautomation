@@ -147,20 +147,15 @@ export class AutomationExecutor {
       targetMs *= 24 * 60 * 60 * 1000; // days to ms
     }
 
-    // Calculate margin based on frequency to catch users since last run
-    // The margin should be wide enough to catch users who should have been processed
-    let marginMs = 60 * 60 * 1000; // default 1 hour for minute/second/hour frequencies
-
-    if (automation.frequency === 'hour') {
-      marginMs = 1.5 * 60 * 60 * 1000; // 1.5 hours margin for hourly runs
-    } else if (automation.frequency === 'day') {
-      marginMs = 25 * 60 * 60 * 1000; // 25 hours margin for daily runs (to handle DST)
-    } else if (automation.frequency === 'week') {
-      marginMs = 25 * 60 * 60 * 1000; // 25 hours margin for weekly runs
-    } else if (automation.frequency === 'minute') {
-      marginMs = 2 * 60 * 1000; // 2 minutes margin for minute runs
-    } else if (automation.frequency === 'second') {
-      marginMs = 2 * 60 * 1000; // 2 minutes margin for second runs
+    // Convert margin to milliseconds
+    let marginMs = automation.marginValue || 1; // default to 1 if not set
+    if (automation.marginUnit === 'hours') {
+      marginMs *= 60 * 60 * 1000; // hours to ms
+    } else if (automation.marginUnit === 'days') {
+      marginMs *= 24 * 60 * 60 * 1000; // days to ms
+    } else {
+      // Fallback: if marginUnit not set, assume hours
+      marginMs *= 60 * 60 * 1000;
     }
 
     // Calculate the target signup time (when users should have signed up)
@@ -172,6 +167,10 @@ export class AutomationExecutor {
     // endTime = latest signup time we should look for
     const startTime = new Date(targetSignupTime.getTime() - marginMs);
     const endTime = new Date(targetSignupTime.getTime() + marginMs);
+
+    console.log(`Target signup time: ${targetSignupTime.toISOString()}`);
+    console.log(`Margin: ${automation.marginValue} ${automation.marginUnit} (${marginMs}ms)`);
+    console.log(`Time window: ${startTime.toISOString()} to ${endTime.toISOString()}`);
 
     return { startTime, endTime };
   }

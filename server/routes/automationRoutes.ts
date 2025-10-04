@@ -46,7 +46,7 @@ router.get('/:id', requireUser(), async (req, res) => {
 
 // Description: Create a new automation
 // Endpoint: POST /api/automations
-// Request: { name, frequency, dayOfWeek?, timeOfDay?, campaignId, campaignName, timingValue, timingUnit, segmentFilters?, isActive }
+// Request: { name, frequency, dayOfWeek?, timeOfDay?, campaignId, campaignName, timingValue, timingUnit, marginValue, marginUnit, segmentFilters?, isActive }
 // Response: { automation: Automation }
 router.post('/', requireUser(), async (req, res) => {
   try {
@@ -56,7 +56,8 @@ router.post('/', requireUser(), async (req, res) => {
 
     // Validate required fields
     if (!automationData.name || !automationData.frequency || !automationData.campaignId ||
-        !automationData.campaignName || !automationData.timingValue || !automationData.timingUnit) {
+        !automationData.campaignName || !automationData.timingValue || !automationData.timingUnit ||
+        !automationData.marginValue || !automationData.marginUnit) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -80,7 +81,7 @@ router.post('/', requireUser(), async (req, res) => {
 
 // Description: Update an automation
 // Endpoint: PUT /api/automations/:id
-// Request: { name?, frequency?, dayOfWeek?, timeOfDay?, campaignId?, campaignName?, timingValue?, timingUnit?, segmentFilters?, isActive? }
+// Request: { name?, frequency?, dayOfWeek?, timeOfDay?, campaignId?, campaignName?, timingValue?, timingUnit?, marginValue?, marginUnit?, segmentFilters?, isActive? }
 // Response: { automation: Automation }
 router.put('/:id', requireUser(), async (req, res) => {
   try {

@@ -13,6 +13,7 @@ import { getSegmentOptions } from '@/api/mongodb';
 import { FrequencySelector } from '@/components/automations/FrequencySelector';
 import { CampaignSelector } from '@/components/automations/CampaignSelector';
 import { TimingSelector } from '@/components/automations/TimingSelector';
+import { MarginSelector } from '@/components/automations/MarginSelector';
 import { SegmentFilters } from '@/components/automations/SegmentFilters';
 
 interface FormData {
@@ -24,6 +25,8 @@ interface FormData {
   campaignName: string;
   timingValue: number;
   timingUnit: string;
+  marginValue: number;
+  marginUnit: string;
   segmentFilters?: {
     useCase?: string[];
     category?: string[];
@@ -56,6 +59,8 @@ export function AutomationForm() {
       campaignName: '',
       timingValue: 2,
       timingUnit: 'hours',
+      marginValue: 1,
+      marginUnit: 'hours',
       segmentFilters: {
         useCase: [],
         category: [],
@@ -123,6 +128,8 @@ export function AutomationForm() {
           campaignName: string;
           timingValue: number;
           timingUnit: string;
+          marginValue: number;
+          marginUnit: string;
           segmentFilters?: {
             useCase?: string[];
             category?: string[];
@@ -140,6 +147,8 @@ export function AutomationForm() {
       setValue('campaignName', automation.campaignName);
       setValue('timingValue', automation.timingValue);
       setValue('timingUnit', automation.timingUnit);
+      setValue('marginValue', automation.marginValue || 1);
+      setValue('marginUnit', automation.marginUnit || 'hours');
       setValue('segmentFilters', automation.segmentFilters || {
         useCase: [],
         category: [],
@@ -180,6 +189,14 @@ export function AutomationForm() {
         throw new Error('Time value must be greater than 0');
       }
 
+      if (!data.marginUnit) {
+        throw new Error('Margin unit is required');
+      }
+
+      if (!data.marginValue || data.marginValue < 1) {
+        throw new Error('Margin value must be greater than 0');
+      }
+
       // Get campaign name from campaigns list
       const campaign = campaigns.find(c => c.id === Number(data.campaignId));
       if (!campaign) {
@@ -195,6 +212,8 @@ export function AutomationForm() {
         campaignName: campaign.name,
         timingValue: data.timingValue,
         timingUnit: data.timingUnit,
+        marginValue: data.marginValue,
+        marginUnit: data.marginUnit,
         segmentFilters: enableSegmentFilters ? data.segmentFilters : undefined,
         isActive: turnOn,
       };
@@ -282,6 +301,13 @@ export function AutomationForm() {
         />
 
         <TimingSelector
+          register={register}
+          setValue={setValue}
+          watch={watch}
+          errors={errors}
+        />
+
+        <MarginSelector
           register={register}
           setValue={setValue}
           watch={watch}
