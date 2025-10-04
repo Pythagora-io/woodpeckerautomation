@@ -1,0 +1,305 @@
+import express, { Request, Response } from 'express';
+import Settings from '../models/Settings';
+import Segment from '../models/Segment';
+import { requireUser } from './middlewares/auth';
+import { encrypt, decrypt } from '../utils/encryption';
+import { testMongoDBConnection, fetchSegmentData } from '../services/mongodbService';
+import { testWoodpeckerConnection, fetchWoodpeckerCampaigns } from '../services/woodpeckerService';
+
+const router = express.Router();
+
+// Helper function to get or create settings
+const getOrCreateSettings = async () => {
+  let settings = await Settings.findOne();
+  if (!settings) {
+    console.log('Creating new settings document');
+    settings = await Settings.create({});
+  }
+  return settings;
+};
+
+// Helper function to get or create segment
+const getOrCreateSegment = async () => {
+  let segment = await Segment.findOne();
+  if (!segment) {
+    console.log('Creating new segment document');
+    segment = await Segment.create({});
+  }
+  return segment;
+};
+
+// Description: Get settings status
+// Endpoint: GET /api/settings/status
+// Request: {}
+// Response: { mongodbConnected: boolean, woodpeckerConnected: boolean, isSetupComplete: boolean }
+router.get('/status', requireUser, async (req: Request, res: Response) => {
+  try {
+    console.log('Fetching settings status');
+    const settings = await getOrCreateSettings();
+
+    res.status(200).json({
+      mongodbConnected: settings.mongodbConnected,
+      woodpeckerConnected: settings.woodpeckerConnected,
+      isSetupComplete: settings.isSetupComplete,
+    });
+  } catch (error: unknown) {
+    console.error('Error fetching settings status:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch settings status';
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Description: Test MongoDB connection
+// Endpoint: POST /api/settings/mongodb/test
+// Request: { url: string }
+// Response: { connected: boolean, message: string, error?: string }
+router.post('/mongodb/test', requireUser, async (req: Request, res: Response) => {
+  try {
+    const { url } = req.body;
+
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'MongoDB URL is required' });
+    }
+
+    console.log('Testing MongoDB connection for user:', req.user?.email);
+
+    // Encrypt the URL
+    const encryptedUrl = encrypt(url);
+
+    // Test the connection
+    const result = await testMongoDBConnection(encryptedUrl);
+
+    // Update settings if connection successful
+    if (result.connected) {
+      const settings = await getOrCreateSettings();
+      settings.mongodbUrl = encryptedUrl;
+      settings.mongodbConnected = true;
+      settings.mongodbLastTested = new Date();
+      await settings.save();
+
+      console.log('MongoDB connection successful, settings updated');
+    }
+
+    res.status(200).json(result);
+  } catch (error: unknown) {
+    console.error('Error testing MongoDB connection:', error);
+    res.status(500).json({
+      connected: false,
+      message: 'Failed to test MongoDB connection',
+      error: error.message || 'Unknown error occurred',
+    });
+  }
+});
+
+// Description: Update MongoDB URL
+// Endpoint: POST /api/settings/mongodb/url
+// Request: { url: string }
+// Response: { success: boolean, message: string }
+router.post('/mongodb/url', requireUser, async (req: Request, res: Response) => {
+  try {
+    const { url } = req.body;
+
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'MongoDB URL is required' });
+    }
+
+    console.log('Updating MongoDB URL for user:', req.user?.email);
+
+    // Encrypt the URL
+    const encryptedUrl = encrypt(url);
+
+    // Update settings
+    const settings = await getOrCreateSettings();
+    settings.mongodbUrl = encryptedUrl;
+    settings.mongodbConnected = false; // Reset connection status
+    await settings.save();
+
+    console.log('MongoDB URL updated successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'MongoDB URL updated successfully',
+    });
+  } catch (error: unknown) {
+    console.error('Error updating MongoDB URL:', error);
+    res.status(500).json({ error: error.message || 'Failed to update MongoDB URL' });
+  }
+});
+
+// Description: Fetch and sync segment data from external MongoDB
+// Endpoint: POST /api/settings/mongodb/sync-segments
+// Request: {}
+// Response: { success: boolean, message: string, data: { useCases: string[], categories: string[], alternatives: string[] } }
+router.post('/mongodb/sync-segments', requireUser, async (req: Request, res: Response) => {
+  try {
+    console.log('Syncing segment data from external MongoDB');
+
+    const settings = await getOrCreateSettings();
+
+    if (!settings.mongodbUrl) {
+      return res.status(400).json({ error: 'MongoDB URL not configured' });
+    }
+
+    if (!settings.mongodbConnected) {
+      return res.status(400).json({ error: 'MongoDB not connected. Please test connection first.' });
+    }
+
+    // Fetch segment data from external MongoDB
+    const segmentData = await fetchSegmentData(settings.mongodbUrl);
+
+    // Update segment in database
+    const segment = await getOrCreateSegment();
+    segment.useCases = segmentData.useCases;
+    segment.categories = segmentData.categories;
+    segment.alternatives = segmentData.alternatives;
+    segment.lastSyncedAt = new Date();
+    await segment.save();
+
+    console.log('Segment data synced successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'Segment data synced successfully',
+      data: segmentData,
+    });
+  } catch (error: unknown) {
+    console.error('Error syncing segment data:', error);
+    res.status(500).json({ error: error.message || 'Failed to sync segment data' });
+  }
+});
+
+// Description: Get stored segment options
+// Endpoint: GET /api/settings/segments
+// Request: {}
+// Response: { useCases: string[], categories: string[], alternatives: string[] }
+router.get('/segments', requireUser, async (req: Request, res: Response) => {
+  try {
+    console.log('Fetching stored segment options');
+
+    const segment = await getOrCreateSegment();
+
+    res.status(200).json({
+      useCases: segment.useCases || [],
+      categories: segment.categories || [],
+      alternatives: segment.alternatives || [],
+    });
+  } catch (error: unknown) {
+    console.error('Error fetching segment options:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch segment options' });
+  }
+});
+
+// Description: Test Woodpecker API connection
+// Endpoint: POST /api/settings/woodpecker/test
+// Request: { apiKey: string }
+// Response: { connected: boolean, message: string, error?: string }
+router.post('/woodpecker/test', requireUser, async (req: Request, res: Response) => {
+  try {
+    const { apiKey } = req.body;
+
+    if (!apiKey || typeof apiKey !== 'string') {
+      return res.status(400).json({ error: 'Woodpecker API key is required' });
+    }
+
+    console.log('Testing Woodpecker API connection for user:', req.user?.email);
+
+    // Encrypt the API key
+    const encryptedApiKey = encrypt(apiKey);
+
+    // Test the connection
+    const result = await testWoodpeckerConnection(encryptedApiKey);
+
+    // Update settings if connection successful
+    if (result.connected) {
+      const settings = await getOrCreateSettings();
+      settings.woodpeckerApiKey = encryptedApiKey;
+      settings.woodpeckerConnected = true;
+      settings.woodpeckerLastTested = new Date();
+
+      // Check if setup is complete
+      if (settings.mongodbConnected) {
+        settings.isSetupComplete = true;
+      }
+
+      await settings.save();
+
+      console.log('Woodpecker API connection successful, settings updated');
+    }
+
+    res.status(200).json(result);
+  } catch (error: unknown) {
+    console.error('Error testing Woodpecker connection:', error);
+    res.status(500).json({
+      connected: false,
+      message: 'Failed to test Woodpecker connection',
+      error: error.message || 'Unknown error occurred',
+    });
+  }
+});
+
+// Description: Update Woodpecker API key
+// Endpoint: POST /api/settings/woodpecker/api-key
+// Request: { apiKey: string }
+// Response: { success: boolean, message: string }
+router.post('/woodpecker/api-key', requireUser, async (req: Request, res: Response) => {
+  try {
+    const { apiKey } = req.body;
+
+    if (!apiKey || typeof apiKey !== 'string') {
+      return res.status(400).json({ error: 'Woodpecker API key is required' });
+    }
+
+    console.log('Updating Woodpecker API key for user:', req.user?.email);
+
+    // Encrypt the API key
+    const encryptedApiKey = encrypt(apiKey);
+
+    // Update settings
+    const settings = await getOrCreateSettings();
+    settings.woodpeckerApiKey = encryptedApiKey;
+    settings.woodpeckerConnected = false; // Reset connection status
+    await settings.save();
+
+    console.log('Woodpecker API key updated successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'Woodpecker API key updated successfully',
+    });
+  } catch (error: unknown) {
+    console.error('Error updating Woodpecker API key:', error);
+    res.status(500).json({ error: error.message || 'Failed to update Woodpecker API key' });
+  }
+});
+
+// Description: Fetch Woodpecker campaigns
+// Endpoint: GET /api/settings/woodpecker/campaigns
+// Request: {}
+// Response: { campaigns: Array<{ id: number, name: string, status: string }> }
+router.get('/woodpecker/campaigns', requireUser, async (req: Request, res: Response) => {
+  try {
+    console.log('Fetching Woodpecker campaigns');
+
+    const settings = await getOrCreateSettings();
+
+    if (!settings.woodpeckerApiKey) {
+      return res.status(400).json({ error: 'Woodpecker API key not configured' });
+    }
+
+    if (!settings.woodpeckerConnected) {
+      return res.status(400).json({ error: 'Woodpecker not connected. Please test connection first.' });
+    }
+
+    // Fetch campaigns from Woodpecker
+    const campaigns = await fetchWoodpeckerCampaigns(settings.woodpeckerApiKey);
+
+    console.log(`Successfully fetched ${campaigns.length} campaigns`);
+
+    res.status(200).json({ campaigns });
+  } catch (error: unknown) {
+    console.error('Error fetching Woodpecker campaigns:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch Woodpecker campaigns' });
+  }
+});
+
+export default router;

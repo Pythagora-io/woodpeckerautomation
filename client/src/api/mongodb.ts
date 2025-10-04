@@ -1,68 +1,57 @@
 import api from './api';
 
 // Description: Test MongoDB connection
-// Endpoint: POST /api/mongodb/test
-// Request: { connectionUrl: string }
-// Response: { success: boolean, message: string }
-export const testMongoDBConnection = (connectionUrl: string) => {
-  // Mocking the response
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: 'Connection successful'
-      });
-    }, 1000);
-  });
-  // Uncomment the below lines to make an actual API call
-  // try {
-  //   return await api.post('/api/mongodb/test', { connectionUrl });
-  // } catch (error) {
-  //   throw new Error(error?.response?.data?.message || error.message);
-  // }
+// Endpoint: POST /api/settings/mongodb/test
+// Request: { url: string }
+// Response: { connected: boolean, message: string, error?: string }
+export const testMongoDBConnection = async (connectionUrl: string) => {
+  try {
+    const response = await api.post('/api/settings/mongodb/test', { url: connectionUrl });
+    return response.data;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error?.response?.data?.error || error.message);
+  }
 };
 
 // Description: Update MongoDB connection URL
-// Endpoint: PUT /api/mongodb/connection
-// Request: { connectionUrl: string }
+// Endpoint: POST /api/settings/mongodb/url
+// Request: { url: string }
 // Response: { success: boolean, message: string }
-export const updateMongoDBConnection = (connectionUrl: string) => {
-  // Mocking the response
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: 'Connection URL updated successfully'
-      });
-    }, 500);
-  });
-  // Uncomment the below lines to make an actual API call
-  // try {
-  //   return await api.put('/api/mongodb/connection', { connectionUrl });
-  // } catch (error) {
-  //   throw new Error(error?.response?.data?.message || error.message);
-  // }
+export const updateMongoDBConnection = async (connectionUrl: string) => {
+  try {
+    const response = await api.post('/api/settings/mongodb/url', { url: connectionUrl });
+    return response.data;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error?.response?.data?.error || error.message);
+  }
+};
+
+// Description: Sync segment data from external MongoDB
+// Endpoint: POST /api/settings/mongodb/sync-segments
+// Request: {}
+// Response: { success: boolean, message: string, data: { useCases: string[], categories: string[], alternatives: string[] } }
+export const syncSegmentData = async () => {
+  try {
+    const response = await api.post('/api/settings/mongodb/sync-segments');
+    return response.data;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error?.response?.data?.error || error.message);
+  }
 };
 
 // Description: Get segment filter options
-// Endpoint: GET /api/mongodb/segment-options
+// Endpoint: GET /api/settings/segments
 // Request: {}
 // Response: { useCases: string[], categories: string[], alternatives: string[] }
-export const getSegmentOptions = () => {
-  // Mocking the response
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        useCases: ['saas', 'ecommerce', 'marketplace', 'b2b', 'b2c', 'enterprise'],
-        categories: ['startup', 'small-business', 'mid-market', 'enterprise', 'agency'],
-        alternatives: ['competitor-a', 'competitor-b', 'competitor-c', 'manual-process', 'in-house-solution']
-      });
-    }, 500);
-  });
-  // Uncomment the below lines to make an actual API call
-  // try {
-  //   return await api.get('/api/mongodb/segment-options');
-  // } catch (error) {
-  //   throw new Error(error?.response?.data?.message || error.message);
-  // }
+export const getSegmentOptions = async () => {
+  try {
+    const response = await api.get('/api/settings/segments');
+    return response.data;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error?.response?.data?.error || error.message);
+  }
 };

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/useToast';
 import { getConnectionStatus } from '@/api/settings';
-import { testMongoDBConnection, updateMongoDBConnection, getSegmentOptions } from '@/api/mongodb';
+import { testMongoDBConnection, updateMongoDBConnection, syncSegmentData } from '@/api/mongodb';
 import { testWoodpeckerConnection, updateWoodpeckerApiKey, getWoodpeckerCampaigns } from '@/api/woodpecker';
 
 export function Settings() {
@@ -33,10 +33,14 @@ export function Settings() {
     try {
       console.log('Loading connection status...');
       const response = await getConnectionStatus() as {
-        mongodb?: { connected: boolean };
-        woodpecker?: { connected: boolean };
+        mongodbConnected: boolean;
+        woodpeckerConnected: boolean;
+        isSetupComplete: boolean;
       };
-      setConnectionStatus(response);
+      setConnectionStatus({
+        mongodb: { connected: response.mongodbConnected },
+        woodpecker: { connected: response.woodpeckerConnected }
+      });
       console.log('Connection status loaded:', response);
     } catch (error) {
       console.error('Error loading connection status:', error);
@@ -61,18 +65,25 @@ export function Settings() {
     try {
       setMongoTesting(true);
       console.log('Testing MongoDB connection...');
-      const response = await testMongoDBConnection(mongoUrl) as { success: boolean };
-      if (response.success) {
+      const response = await testMongoDBConnection(mongoUrl) as { connected: boolean; message: string; error?: string };
+      if (response.connected) {
         toast({
           title: 'Success',
-          description: '✓ Connection successful',
+          description: response.message,
+        });
+        loadConnectionStatus();
+      } else {
+        toast({
+          title: 'Error',
+          description: response.error || response.message,
+          variant: 'destructive'
         });
       }
     } catch (error) {
       console.error('MongoDB connection test failed:', error);
       toast({
         title: 'Error',
-        description: '✗ Connection failed. Please check your URL.',
+        description: error instanceof Error ? error.message : 'Connection failed. Please check your URL.',
         variant: 'destructive'
       });
     } finally {
@@ -112,19 +123,23 @@ export function Settings() {
   const handleRefreshSegments = async () => {
     try {
       setRefreshingSegments(true);
-      console.log('Refreshing segment data...');
-      const response = await getSegmentOptions() as {
-        useCases: string[];
-        categories: string[];
-        alternatives: string[];
+      console.log('Syncing segment data from external MongoDB...');
+      const response = await syncSegmentData() as {
+        success: boolean;
+        message: string;
+        data: {
+          useCases: string[];
+          categories: string[];
+          alternatives: string[];
+        };
       };
-      const totalOptions = response.useCases.length + response.categories.length + response.alternatives.length;
+      const totalOptions = response.data.useCases.length + response.data.categories.length + response.data.alternatives.length;
       toast({
         title: 'Success',
-        description: `Refreshed ${totalOptions} segment options`,
+        description: `Synced ${totalOptions} segment options from external database`,
       });
     } catch (error) {
-      console.error('Error refreshing segment data:', error);
+      console.error('Error syncing segment data:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'An error occurred',
@@ -149,20 +164,28 @@ export function Settings() {
       setWoodpeckerTesting(true);
       console.log('Testing Woodpecker connection...');
       const response = await testWoodpeckerConnection(woodpeckerKey) as {
-        success: boolean;
-        campaignCount: number;
+        connected: boolean;
+        message: string;
+        error?: string;
       };
-      if (response.success) {
+      if (response.connected) {
         toast({
           title: 'Success',
-          description: `✓ Connected. Found ${response.campaignCount} campaigns.`,
+          description: response.message,
+        });
+        loadConnectionStatus();
+      } else {
+        toast({
+          title: 'Error',
+          description: response.error || response.message,
+          variant: 'destructive'
         });
       }
     } catch (error) {
       console.error('Woodpecker connection test failed:', error);
       toast({
         title: 'Error',
-        description: '✗ Connection failed. Please check your API key.',
+        description: error instanceof Error ? error.message : 'Connection failed. Please check your API key.',
         variant: 'destructive'
       });
     } finally {
