@@ -86,11 +86,11 @@ export class AutomationExecutor {
     try {
       // Get MongoDB connection URL from settings
       const settings = await Settings.findOne({});
-      if (!settings?.externalMongoUrl) {
+      if (!settings?.mongodbUrl) {
         throw new Error('External MongoDB URL not configured');
       }
 
-      const mongoUrl = decrypt(settings.externalMongoUrl);
+      const mongoUrl = decrypt(settings.mongodbUrl);
 
       // Calculate time window
       const { startTime, endTime } = this.calculateTimeWindow(automation);
