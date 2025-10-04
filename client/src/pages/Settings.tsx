@@ -14,7 +14,10 @@ import { testWoodpeckerConnection, updateWoodpeckerApiKey, getWoodpeckerCampaign
 export function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [connectionStatus, setConnectionStatus] = useState<any>({});
+  const [connectionStatus, setConnectionStatus] = useState<{
+    mongodb?: { connected: boolean };
+    woodpecker?: { connected: boolean };
+  }>({});
   const [mongoUrl, setMongoUrl] = useState('');
   const [woodpeckerKey, setWoodpeckerKey] = useState('');
   const [mongoTesting, setMongoTesting] = useState(false);
@@ -28,14 +31,17 @@ export function Settings() {
   const loadConnectionStatus = async () => {
     try {
       console.log('Loading connection status...');
-      const response: any = await getConnectionStatus();
+      const response = await getConnectionStatus() as {
+        mongodb?: { connected: boolean };
+        woodpecker?: { connected: boolean };
+      };
       setConnectionStatus(response);
       console.log('Connection status loaded:', response);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading connection status:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -54,14 +60,14 @@ export function Settings() {
     try {
       setMongoTesting(true);
       console.log('Testing MongoDB connection...');
-      const response: any = await testMongoDBConnection(mongoUrl);
+      const response = await testMongoDBConnection(mongoUrl) as { success: boolean };
       if (response.success) {
         toast({
           title: 'Success',
           description: '✓ Connection successful',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('MongoDB connection test failed:', error);
       toast({
         title: 'Error',
@@ -92,11 +98,11 @@ export function Settings() {
       });
       setMongoUrl('');
       loadConnectionStatus();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating MongoDB connection:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -115,14 +121,17 @@ export function Settings() {
     try {
       setWoodpeckerTesting(true);
       console.log('Testing Woodpecker connection...');
-      const response: any = await testWoodpeckerConnection(woodpeckerKey);
+      const response = await testWoodpeckerConnection(woodpeckerKey) as {
+        success: boolean;
+        campaignCount: number;
+      };
       if (response.success) {
         toast({
           title: 'Success',
           description: `✓ Connected. Found ${response.campaignCount} campaigns.`,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Woodpecker connection test failed:', error);
       toast({
         title: 'Error',
@@ -153,11 +162,11 @@ export function Settings() {
       });
       setWoodpeckerKey('');
       loadConnectionStatus();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating Woodpecker API key:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -167,16 +176,18 @@ export function Settings() {
     try {
       setRefreshingCampaigns(true);
       console.log('Refreshing campaigns...');
-      const response: any = await getWoodpeckerCampaigns();
+      const response = await getWoodpeckerCampaigns() as {
+        campaigns: Array<{ id: string; name: string }>;
+      };
       toast({
         title: 'Success',
         description: `Refreshed ${response.campaigns.length} campaigns`,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error refreshing campaigns:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     } finally {

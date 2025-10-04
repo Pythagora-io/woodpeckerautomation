@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users } from 'lucide-react';
 
 interface TimingSelectorProps {
-  register: any;
-  errors: any;
+  register: ReturnType<typeof import('react-hook-form').useForm>['register'];
+  errors: Record<string, { message?: string }>;
 }
 
 export function TimingSelector({ register, errors }: TimingSelectorProps) {

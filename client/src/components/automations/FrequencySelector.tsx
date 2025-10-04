@@ -6,9 +6,9 @@ import { Clock } from 'lucide-react';
 
 interface FrequencySelectorProps {
   frequency: string;
-  register: any;
-  setValue: any;
-  watch: any;
+  register: ReturnType<typeof import('react-hook-form').useForm>['register'];
+  setValue: ReturnType<typeof import('react-hook-form').useForm>['setValue'];
+  watch: ReturnType<typeof import('react-hook-form').useForm>['watch'];
 }
 
 export function FrequencySelector({ frequency, register, setValue, watch }: FrequencySelectorProps) {

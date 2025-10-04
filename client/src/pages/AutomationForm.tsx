@@ -18,7 +18,7 @@ import { SegmentFilters } from '@/components/automations/SegmentFilters';
 interface FormData {
   name: string;
   frequency: string;
-  frequencyDetails: any;
+  frequencyDetails: Record<string, unknown>;
   campaignId: string;
   timeValue: number;
   timeUnit: string;
@@ -36,8 +36,12 @@ export function AutomationForm() {
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [segmentOptions, setSegmentOptions] = useState<any>({});
+  const [campaigns, setCampaigns] = useState<Array<{ id: string; name: string }>>([]);
+  const [segmentOptions, setSegmentOptions] = useState<{
+    useCases?: string[];
+    categories?: string[];
+    alternatives?: string[];
+  }>({});
   const [enableSegmentFilters, setEnableSegmentFilters] = useState(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
@@ -71,18 +75,21 @@ export function AutomationForm() {
   const loadData = async () => {
     try {
       console.log('Loading campaigns and segment options...');
-      const [campaignsRes, segmentRes]: any = await Promise.all([
+      const [campaignsRes, segmentRes] = await Promise.all([
         getWoodpeckerCampaigns(),
         getSegmentOptions()
-      ]);
+      ]) as [
+        { campaigns: Array<{ id: string; name: string }> },
+        { useCases?: string[]; categories?: string[]; alternatives?: string[] }
+      ];
       setCampaigns(campaignsRes.campaigns);
       setSegmentOptions(segmentRes);
       console.log('Data loaded successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading data:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -91,9 +98,23 @@ export function AutomationForm() {
   const loadAutomation = async (automationId: string) => {
     try {
       console.log(`Loading automation ${automationId}...`);
-      const response: any = await getAutomationById(automationId);
+      const response = await getAutomationById(automationId) as {
+        automation: {
+          name: string;
+          frequency: string;
+          frequencyDetails: Record<string, unknown>;
+          campaignId: string;
+          timeValue: number;
+          timeUnit: string;
+          segmentFilters: {
+            useCase: string[];
+            category: string[];
+            alternative: string[];
+          };
+        };
+      };
       const automation = response.automation;
-      
+
       setValue('name', automation.name);
       setValue('frequency', automation.frequency);
       setValue('frequencyDetails', automation.frequencyDetails);
@@ -101,18 +122,18 @@ export function AutomationForm() {
       setValue('timeValue', automation.timeValue);
       setValue('timeUnit', automation.timeUnit);
       setValue('segmentFilters', automation.segmentFilters);
-      
+
       const hasFilters = automation.segmentFilters.useCase?.length > 0 ||
                         automation.segmentFilters.category?.length > 0 ||
                         automation.segmentFilters.alternative?.length > 0;
       setEnableSegmentFilters(hasFilters);
-      
+
       console.log('Automation loaded successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading automation:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -148,11 +169,11 @@ export function AutomationForm() {
       }
 
       navigate('/');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving automation:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     } finally {

@@ -7,10 +7,14 @@ import { MultiSelect } from '@/components/ui/multi-select';
 interface SegmentFiltersProps {
   enabled: boolean;
   onEnabledChange: (enabled: boolean) => void;
-  segmentOptions: any;
-  register: any;
-  setValue: any;
-  watch: any;
+  segmentOptions: {
+    useCases?: string[];
+    categories?: string[];
+    alternatives?: string[];
+  };
+  register: ReturnType<typeof import('react-hook-form').useForm>['register'];
+  setValue: ReturnType<typeof import('react-hook-form').useForm>['setValue'];
+  watch: ReturnType<typeof import('react-hook-form').useForm>['watch'];
 }
 
 export function SegmentFilters({ 

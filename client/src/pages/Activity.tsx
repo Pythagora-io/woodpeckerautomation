@@ -31,14 +31,14 @@ export function Activity() {
   const loadActivities = async () => {
     try {
       console.log('Loading activity log...');
-      const response: any = await getActivityLog();
+      const response = await getActivityLog() as { activities: Activity[] };
       setActivities(response.activities);
       console.log('Activity log loaded:', response.activities.length);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading activity log:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     } finally {

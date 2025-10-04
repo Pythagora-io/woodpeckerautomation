@@ -33,7 +33,7 @@ export function Setup() {
     try {
       setMongoTesting(true);
       console.log('Testing MongoDB connection...');
-      const response: any = await testMongoDBConnection(mongoUrl);
+      const response = await testMongoDBConnection(mongoUrl) as { success: boolean };
       if (response.success) {
         setMongoSuccess(true);
         toast({
@@ -41,7 +41,7 @@ export function Setup() {
           description: '✓ Connection successful',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('MongoDB connection test failed:', error);
       toast({
         title: 'Error',
@@ -67,11 +67,11 @@ export function Setup() {
       console.log('Saving MongoDB connection...');
       await updateMongoDBConnection(mongoUrl);
       setStep(2);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving MongoDB connection:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -90,7 +90,10 @@ export function Setup() {
     try {
       setWoodpeckerTesting(true);
       console.log('Testing Woodpecker connection...');
-      const response: any = await testWoodpeckerConnection(woodpeckerKey);
+      const response = await testWoodpeckerConnection(woodpeckerKey) as {
+        success: boolean;
+        campaignCount: number;
+      };
       if (response.success) {
         setWoodpeckerSuccess(true);
         toast({
@@ -98,7 +101,7 @@ export function Setup() {
           description: `✓ Connected. Found ${response.campaignCount} campaigns.`,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Woodpecker connection test failed:', error);
       toast({
         title: 'Error',
@@ -124,11 +127,11 @@ export function Setup() {
       console.log('Saving Woodpecker API key...');
       await updateWoodpeckerApiKey(woodpeckerKey);
       setStep(3);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving Woodpecker API key:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }

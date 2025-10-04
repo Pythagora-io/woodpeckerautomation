@@ -15,12 +15,16 @@ interface Automation {
   name: string;
   status: boolean;
   frequency: string;
-  frequencyDetails: any;
+  frequencyDetails: Record<string, unknown>;
   campaignId: string;
   campaignName: string;
   timeValue: number;
   timeUnit: string;
-  segmentFilters: any;
+  segmentFilters: {
+    useCase?: string[];
+    category?: string[];
+    alternative?: string[];
+  };
   lastRun: string;
 }
 
@@ -39,14 +43,14 @@ export function Dashboard() {
   const loadAutomations = async () => {
     try {
       console.log('Loading automations...');
-      const response: any = await getAutomations();
+      const response = await getAutomations() as { automations: Automation[] };
       setAutomations(response.automations);
       console.log('Automations loaded:', response.automations.length);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading automations:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     } finally {
@@ -58,18 +62,18 @@ export function Dashboard() {
     try {
       console.log(`Toggling automation ${id} status to ${!currentStatus}`);
       await toggleAutomationStatus(id, !currentStatus);
-      setAutomations(automations.map(auto => 
+      setAutomations(automations.map(auto =>
         auto._id === id ? { ...auto, status: !currentStatus } : auto
       ));
       toast({
         title: 'Success',
         description: `Automation turned ${!currentStatus ? 'ON' : 'OFF'}`,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error toggling automation status:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
@@ -77,7 +81,7 @@ export function Dashboard() {
 
   const handleDelete = async () => {
     if (!selectedAutomation) return;
-    
+
     try {
       console.log(`Deleting automation ${selectedAutomation}`);
       await deleteAutomation(selectedAutomation);
@@ -88,17 +92,17 @@ export function Dashboard() {
       });
       setDeleteDialogOpen(false);
       setSelectedAutomation(null);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting automation:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive'
       });
     }
   };
 
-  const getFrequencyLabel = (frequency: string, details: any) => {
+  const getFrequencyLabel = (frequency: string, details: Record<string, unknown>) => {
     switch (frequency) {
       case 'minute':
         return 'Every minute';
@@ -115,7 +119,11 @@ export function Dashboard() {
     }
   };
 
-  const getSegmentFilterSummary = (filters: any) => {
+  const getSegmentFilterSummary = (filters: {
+    useCase?: string[];
+    category?: string[];
+    alternative?: string[];
+  }) => {
     const parts = [];
     if (filters.useCase && filters.useCase.length > 0) {
       parts.push(`Use Case: ${filters.useCase.join(', ')}`);

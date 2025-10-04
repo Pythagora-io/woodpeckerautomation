@@ -60,7 +60,20 @@ export const getAutomations = () => {
 // Endpoint: POST /api/automations
 // Request: { name: string, frequency: string, frequencyDetails: object, campaignId: string, timeValue: number, timeUnit: string, segmentFilters: object, status: boolean }
 // Response: { automation: { _id: string, name: string, status: boolean, frequency: string, frequencyDetails: object, campaignId: string, timeValue: number, timeUnit: string, segmentFilters: object } }
-export const createAutomation = (data: any) => {
+export const createAutomation = (data: {
+  name: string;
+  frequency: string;
+  frequencyDetails: Record<string, unknown>;
+  campaignId: string;
+  timeValue: number;
+  timeUnit: string;
+  segmentFilters: {
+    useCase: string[];
+    category: string[];
+    alternative: string[];
+  };
+  status: boolean;
+}) => {
   // Mocking the response
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -84,7 +97,20 @@ export const createAutomation = (data: any) => {
 // Endpoint: PUT /api/automations/:id
 // Request: { name: string, frequency: string, frequencyDetails: object, campaignId: string, timeValue: number, timeUnit: string, segmentFilters: object, status: boolean }
 // Response: { automation: { _id: string, name: string, status: boolean, frequency: string, frequencyDetails: object, campaignId: string, timeValue: number, timeUnit: string, segmentFilters: object } }
-export const updateAutomation = (id: string, data: any) => {
+export const updateAutomation = (id: string, data: {
+  name: string;
+  frequency: string;
+  frequencyDetails: Record<string, unknown>;
+  campaignId: string;
+  timeValue: number;
+  timeUnit: string;
+  segmentFilters: {
+    useCase: string[];
+    category: string[];
+    alternative: string[];
+  };
+  status: boolean;
+}) => {
   // Mocking the response
   return new Promise((resolve) => {
     setTimeout(() => {

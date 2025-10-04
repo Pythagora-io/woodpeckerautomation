@@ -4,9 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Zap } from 'lucide-react';
 
 interface CampaignSelectorProps {
-  campaigns: any[];
-  register: any;
-  errors: any;
+  campaigns: Array<{ id: string; name: string }>;
+  register: ReturnType<typeof import('react-hook-form').useForm>['register'];
+  errors: Record<string, { message?: string }>;
 }
 
 export function CampaignSelector({ campaigns, register, errors }: CampaignSelectorProps) {
